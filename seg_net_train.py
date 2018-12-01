@@ -15,7 +15,6 @@ param_config_file_name = os.path.join(os.getcwd(), 'seg_net_config.json')
 
 # define metrics
 def compute_metrics(groundtruth, prediction, axis=1, num_classes=15):
-    groundtruth = tf.squeeze(groundtruth)
     prediction_labels = tf.argmax(
         tf.nn.softmax(prediction, axis=axis), axis=axis)
 
@@ -26,12 +25,9 @@ def compute_metrics(groundtruth, prediction, axis=1, num_classes=15):
 
 # define cross entropy loss
 def compute_loss(groundtruth, prediction, axis=1, name='mean_cross_entropy'):
-
     if axis == 1:
         prediction = tf.transpose(prediction, perm=[0, 2, 3, 1])
-        groundtruth = tf.transpose(groundtruth, perm=[0, 2, 3, 1])
 
-    groundtruth = tf.squeeze(groundtruth)
     mean_ce = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(
         labels=groundtruth, logits=prediction), name=name)
 
