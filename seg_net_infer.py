@@ -13,6 +13,7 @@ from seg_net_utils import read_config_file, init
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 IMAGENET_MEAN = np.array([103.939, 116.779, 123.68]).reshape(1, 3)
+
 param_config_file_name = os.path.join(os.getcwd(), 'seg_net_config.json')
 
 # get softmax layer
@@ -44,24 +45,24 @@ def get_tf_dataset(images_list, num_epochs=1, batch_size=1):
 
 # run inference on test set
 def infer(FLAGS):
-    print('Initializing..................')
+    print('Initializing.............................')
     model_dir = FLAGS.model_dir + FLAGS.model_to_use + \
         '_' + str(FLAGS.num_epochs)
     labels_dir = 'labels_' + FLAGS.which_set + \
         '_' + str(FLAGS.which_checkpoint_model)
     init(os.path.join(model_dir, labels_dir))
-    print('Initializing completed........')
+    print('Initializing completed...................')
     print('')
 
-    print('Preparing inference meta data.....................')
+    print('Preparing inference meta data............')
     images_dir_infer = os.path.join(FLAGS.data_dir, FLAGS.which_set)
     list_infer = os.listdir(images_dir_infer)
     list_images_infer = [os.path.join(images_dir_infer, x) for x in list_infer]
     num_samples_infer = len(list_images_infer)
-    print('Preparing inference meta data completed...........')
+    print('Preparing inference meta data completed..')
     print('')
 
-    print('Building the model.....................')
+    print('Building the model.......................')
     test_dataset = get_tf_dataset(list_images_infer, 1, 1)
     iterator = test_dataset.make_one_shot_iterator()
     images_features_infer = iterator.get_next()
@@ -70,10 +71,9 @@ def infer(FLAGS):
     if FLAGS.data_format == 'channels_first':
         axis = 1
 
-    # build model
-    is_training = tf.placeholder(tf.bool)
+    training_pl = tf.placeholder(tf.bool)
     net_arch = seg_net_model.SegNet(
-        FLAGS.pretrained_weights, is_training, FLAGS.data_format, FLAGS.num_classes)
+        FLAGS.pretrained_weights, training_pl, FLAGS.data_format, FLAGS.num_classes)
     net_arch.vgg16_encoder(images_features_infer)
 
     if FLAGS.model_to_use == 'bilinear':
@@ -88,28 +88,30 @@ def infer(FLAGS):
     network_logits = net_arch.logits
     probs_prediction = get_softmax_layer(logits=network_logits, axis=axis)
     labels_prediction = tf.argmax(probs_prediction, axis=axis)
-    print('Building the model completed...........')
+    print('Building the model completed.............')
     print('')
 
-    print('Running inference on data : ' + images_dir_infer)
+    print('Running inference on following data : ' + images_dir_infer)
+    print('')
 
     os.environ['CUDA_VISIBLE_DEVICES'] = '0'
     ss = tf.Session(config=tf.ConfigProto(device_count={'GPU': 1}))
+    #ss = tf.Session()
     ss.run(tf.global_variables_initializer())
 
-    # load model parameters
-    print('Loading model parameters ....................')
+    # load the model parameters
+    print('Loading the model parameters.............')
     tf.train.Saver().restore(ss, os.path.join(os.getcwd(), model_dir,
                                               FLAGS.model_file + '-' + str(FLAGS.which_checkpoint_model)))
-    print('Loading model parameters completed...........')
+    print('Loading the model parameters completed...')
     print('')
 
-    print('Inference started.......................')
+    print('Inference started........................')
 
     for img_file in list_images_infer:
         ti = time.time()
         labels_predicted = ss.run(
-            labels_prediction, feed_dict={is_training: False})
+            labels_prediction, feed_dict={training_pl: False})
         ti = time.time() - ti
         print('Time Taken for Inference : ' + str(ti))
         print('')
@@ -119,8 +121,7 @@ def infer(FLAGS):
         cv2.imwrite(os.path.join(os.getcwd(), model_dir, labels_dir,
                                  'label_' + img_file.split('/')[-1]), labels_predicted)
 
-    print('Inference completed.....................')
-
+    print('Inference completed......................')
     print('')
     ss.close()
 
