@@ -10,11 +10,14 @@
 * Unpooling mechanism used to upsample features. This uses the stored indices from corresponding pooling stage.
 
 ## Intructions to run
-> To run training use - **python3 seg\_net\_train.py -h**
->
-> To run inference use - **python3 seg\_net\_infer.py -h**
->
-> This lists all possible commandline arguments
+* To run training use
+```
+python3 src/seg_net_train.py --help
+```
+* To run inference use
+```
+python3 src/seg_net_infer.py -help
+```
 
 ## Reference
 * [VGG](https://arxiv.org/abs/1409.1556)
@@ -22,12 +25,3 @@
 * [Bayesian SegNet](https://arxiv.org/pdf/1511.02680.pdf)
 * [SegNet Project](http://mi.eng.cam.ac.uk/projects/segnet/)
 * [Cityscapes Dataset](https://www.cityscapes-dataset.com/)
-
-## To do
-- [x] convolution transpose upsampling
-- [x] bilinear upsampling
-- [x] nearest neighbor upsampling
-- [x] bayesian with convolution transpose upsampling
-- [ ] Visualize results
-- [ ] Compute metrics
-
